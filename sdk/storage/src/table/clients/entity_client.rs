@@ -78,9 +78,7 @@ impl EntityClient {
     }
 
     pub fn delete(&self) -> DeleteEntityBuilder {
-        DeleteEntityBuilder::new(
-            self,
-        )
+        DeleteEntityBuilder::new(self)
     }
 
     pub(crate) fn url(&self) -> &Url {
@@ -196,7 +194,10 @@ mod integration_tests {
             .expect("the request for the entity should succeed")
             .entity;
 
-        assert_eq!(&entity.name, &true_entity.name, "the entity names should match");
+        assert_eq!(
+            &entity.name, &true_entity.name,
+            "the entity names should match"
+        );
 
         entity.name = "Updated".to_owned();
 
@@ -213,7 +214,10 @@ mod integration_tests {
             .expect("the request for the entity should succeed")
             .entity;
 
-        assert_eq!(&entity.name, &true_entity.name, "the entity names should match");
+        assert_eq!(
+            &entity.name, &true_entity.name,
+            "the entity names should match"
+        );
     }
 
     #[tokio::test]

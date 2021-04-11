@@ -206,7 +206,10 @@ mod integration_tests {
         while let Some(response) = stream.next().await {
             let result = response.expect("the response should succeed");
             for entity in result.entities {
-                assert_eq!(&entity.name, "Francesco", "the entity should have the same name");
+                assert_eq!(
+                    &entity.name, "Francesco",
+                    "the entity should have the same name"
+                );
             }
         }
     }

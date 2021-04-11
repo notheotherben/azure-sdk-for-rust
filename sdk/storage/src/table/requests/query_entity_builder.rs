@@ -8,7 +8,8 @@ use http::status::StatusCode;
 use serde::de::DeserializeOwned;
 use std::convert::TryInto;
 
-#[cfg(test)] use std::println as debug;
+#[cfg(test)]
+use std::println as debug;
 
 #[derive(Debug, Clone)]
 pub struct QueryEntityBuilder<'a> {

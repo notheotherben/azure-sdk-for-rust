@@ -8,6 +8,8 @@ use http::status::StatusCode;
 use serde::de::DeserializeOwned;
 use std::convert::TryInto;
 
+#[cfg(test)] use std::println as debug;
+
 #[derive(Debug, Clone)]
 pub struct QueryEntityBuilder<'a> {
     table_client: &'a TableClient,
@@ -75,6 +77,8 @@ impl<'a> QueryEntityBuilder<'a> {
             .http_client()
             .execute_request_check_status(request.0, StatusCode::OK)
             .await?;
+
+        debug!("response == {:#?}\n", response);
 
         Ok((&response).try_into()?)
     }

@@ -8,6 +8,8 @@ use http::{method::Method, StatusCode};
 use serde::Serialize;
 use std::convert::TryInto;
 
+#[cfg(test)] use std::println as debug;
+
 #[derive(Debug, Clone)]
 pub struct DeleteEntityBuilder<'a> {
     entity_client: &'a EntityClient,
@@ -39,7 +41,7 @@ impl<'a> DeleteEntityBuilder<'a> {
         let mut url = self.entity_client.url().clone();
 
         self.timeout.append_to_url_query(&mut url);
-        println!("url = {}", url);
+        debug!("url = {}", url);
 
         let request = self.entity_client.prepare_request(
             url.as_str(),
@@ -52,13 +54,15 @@ impl<'a> DeleteEntityBuilder<'a> {
             None,
         )?;
 
-        println!("request == {:#?}\n", request);
+        debug!("request == {:#?}\n", request);
 
         let response = self
             .entity_client
             .http_client()
             .execute_request_check_status(request.0, StatusCode::NO_CONTENT)
             .await?;
+
+        debug!("response == {:#?}\n", response);
 
         Ok((&response).try_into()?)
     }

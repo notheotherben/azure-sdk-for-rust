@@ -7,6 +7,8 @@ use http::status::StatusCode;
 use serde::de::DeserializeOwned;
 use std::convert::TryInto;
 
+#[cfg(test)] use std::println as debug;
+
 #[derive(Debug, Clone)]
 pub struct GetEntityBuilder<'a> {
     entity_client: &'a EntityClient,
@@ -58,6 +60,8 @@ impl<'a> GetEntityBuilder<'a> {
             .http_client()
             .execute_request_check_status(request.0, StatusCode::OK)
             .await?;
+
+        debug!("response == {:#?}\n", response);
 
         Ok((&response).try_into()?)
     }

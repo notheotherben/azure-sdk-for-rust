@@ -202,6 +202,12 @@ mod integration_tests {
             .await
             .expect("the insert operation should succeed");
 
-        // TODO: Validate that the entity was inserted
+        let mut stream = Box::pin(table.query().stream::<TestEntity>());
+        while let Some(response) = stream.next().await {
+            let result = response.expect("the response should succeed");
+            for entity in result.entities {
+                assert_eq!(&entity.name, "Francesco", "the entity should have the same name");
+            }
+        }
     }
 }

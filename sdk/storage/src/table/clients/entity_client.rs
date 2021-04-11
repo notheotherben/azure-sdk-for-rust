@@ -166,7 +166,7 @@ mod integration_tests {
             .await
             .expect("the table should be created");
 
-        let entity = TestEntity {
+        let mut entity = TestEntity {
             city: "Milan".to_owned(),
             name: "Francesco".to_owned(),
             surname: "Cogno".to_owned(),
@@ -189,7 +189,16 @@ mod integration_tests {
             .await
             .expect("the entity should be inserted");
 
-        // TODO: Confirm that the entity was inserted
+        let true_entity: TestEntity = entity_client
+            .get()
+            .execute()
+            .await
+            .expect("the request for the entity should succeed")
+            .entity;
+
+        assert_eq!(&entity.name, &true_entity.name, "the entity names should match");
+
+        entity.name = "Updated".to_owned();
 
         entity_client
             .update()
@@ -197,7 +206,14 @@ mod integration_tests {
             .await
             .expect("the update operation should complete");
 
-        // TODO: Confirm that the entity was updated
+        let true_entity: TestEntity = entity_client
+            .get()
+            .execute()
+            .await
+            .expect("the request for the entity should succeed")
+            .entity;
+
+        assert_eq!(&entity.name, &true_entity.name, "the entity names should match");
     }
 
     #[tokio::test]
@@ -362,5 +378,63 @@ mod integration_tests {
             .expect("the insert or merge operation should complete");
 
         // TODO: Confirm that the entity was merged
+    }
+
+    #[tokio::test]
+    async fn test_delete() {
+        let table_client = get_emulator_client();
+
+        let table = table_client.as_table_client("EntityClientDelete");
+
+        println!("Delete the table (if it exists)");
+        match table.delete().execute().await {
+            _ => {}
+        }
+
+        println!("Create the table");
+        table
+            .create()
+            .execute()
+            .await
+            .expect("the table should be created");
+
+        let entity = TestEntity {
+            city: "Milan".to_owned(),
+            name: "Francesco".to_owned(),
+            surname: "Cogno".to_owned(),
+        };
+
+        let entity_client = table
+            .as_partition_key_client(&entity.city)
+            .as_entity_client(&entity.surname)
+            .expect("an entity client");
+
+        table
+            .insert()
+            .execute(&entity)
+            .await
+            .expect("the entity should be inserted");
+
+        println!("Confirming that the entity is present in the table");
+        let _true_entity: TestEntity = entity_client
+            .get()
+            .execute()
+            .await
+            .expect("the request for the entity should succeed")
+            .entity;
+
+        println!("Deleting the entity");
+        entity_client
+            .delete()
+            .execute()
+            .await
+            .expect("the request to delete the entity should succeed");
+
+        println!("Confirming that the entity is not present in the table");
+        entity_client
+            .get()
+            .execute::<TestEntity>()
+            .await
+            .expect_err("the entity should no longer exist in the table");
     }
 }

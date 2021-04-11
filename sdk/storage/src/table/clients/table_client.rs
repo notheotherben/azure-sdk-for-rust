@@ -205,12 +205,86 @@ mod integration_tests {
         let mut stream = Box::pin(table.query().stream::<TestEntity>());
         while let Some(response) = stream.next().await {
             let result = response.expect("the response should succeed");
+            assert_eq!(
+                result.entities.len(),
+                1,
+                "there should be one item in the results list"
+            );
             for entity in result.entities {
                 assert_eq!(
                     &entity.name, "Francesco",
                     "the entity should have the same name"
                 );
             }
+        }
+    }
+
+    #[tokio::test]
+    async fn test_query() {
+        let table_client = get_emulator_client();
+
+        let table = table_client.as_table_client("TableClientQuery");
+
+        println!("Delete the table (if it exists)");
+        match table.delete().execute().await {
+            _ => {}
+        }
+
+        println!("Create the table");
+        table
+            .create()
+            .execute()
+            .await
+            .expect("the table should be created");
+
+        let entity = TestEntity {
+            city: "Milan".to_owned(),
+            name: "Francesco".to_owned(),
+            surname: "Cogno".to_owned(),
+        };
+
+        println!("Insert an entity into the table");
+        table
+            .insert()
+            .return_entity(true)
+            .execute(&entity)
+            .await
+            .expect("the insert operation should succeed");
+
+        let mut stream = Box::pin(
+            table
+                .query()
+                .filter("PartitionKey eq 'Milan'")
+                .stream::<TestEntity>(),
+        );
+        while let Some(response) = stream.next().await {
+            let result = response.expect("the response should succeed");
+            assert_eq!(
+                result.entities.len(),
+                1,
+                "there should be one item in the results list"
+            );
+            for entity in result.entities {
+                assert_eq!(
+                    &entity.name, "Francesco",
+                    "the entity should have the same name"
+                );
+            }
+        }
+
+        let mut stream = Box::pin(
+            table
+                .query()
+                .filter("PartitionKey eq 'Dublin'")
+                .stream::<TestEntity>(),
+        );
+        while let Some(response) = stream.next().await {
+            let result = response.expect("the response should succeed");
+            assert_eq!(
+                result.entities.len(),
+                0,
+                "there should be no items in the results list"
+            );
         }
     }
 }
